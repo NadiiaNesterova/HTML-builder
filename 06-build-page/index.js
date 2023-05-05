@@ -52,8 +52,6 @@ async function updateStyle() {
 
 async function updateAssets() {
   try {
-    const filePaths = await readDirectoryRecursive(assetsPath);
-
     const destPath = pagesPath;
     await copyDirectory(assetsPath, destPath);
 
@@ -61,23 +59,6 @@ async function updateAssets() {
   } catch (err) {
     console.error('Failed to update assets', err);
   }
-}
-
-async function readDirectoryRecursive(dirPath) {
-  const files = await fs.readdir(dirPath);
-
-  const filePaths = await Promise.all(files.map(async (file) => {
-    const filePath = path.join(dirPath, file);
-    const stats = await fs.stat(filePath);
-    if (stats.isFile()) {
-      return filePath;
-    } else if (stats.isDirectory()) {
-      const subFilePaths = await readDirectoryRecursive(filePath);
-      return subFilePaths;
-    }
-  }));
-
-  return filePaths.flat();
 }
 
 async function copyDirectory(srcPath, destPath) {
@@ -97,18 +78,26 @@ async function copyDirectory(srcPath, destPath) {
   }));
 }
 
-// Создаем директорию проекта
-fs.mkdir(path.join(distPath), { recursive: true })
-  .then(() => {
-    return Promise.all([
+async function buildProject() {
+  try {
+    // Удаляем папку и её содержимое
+    await fs.rm(distPath, { recursive: true, force: true });
+
+    // Создаем директорию проекта
+    await fs.mkdir(path.join(distPath), { recursive: true });
+
+    // Обновляем индекс, стили и ассеты
+    await Promise.all([
       updateIndex(),
       updateStyle(),
       updateAssets()
     ]);
-  })
-  .then(() => {
+
     console.log('Project built successfully!');
-  })
-  .catch((err) => {
+  } catch (err) {
     console.error('Failed to build project', err);
-  });
+  }
+}
+
+buildProject();
+
