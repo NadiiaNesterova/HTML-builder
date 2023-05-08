@@ -1,20 +1,21 @@
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
 
 const directory = './03-files-in-folder/secret-folder';
 
 async function readDirectory() {
   try {
-    const files = await fs.promises.readdir(directory);
+    const files = await fs.readdir(directory);
+
     for (const file of files) {
       const filePath = path.join(directory, file);
-      const fileStats = await fs.promises.stat(filePath);
+      const fileStats = await fs.stat(filePath);
+
       if (fileStats.isFile()) {
-        const name = path.basename(file, path.extname(file));
-        const extension = path.extname(file).substring(1);
+        const { name, ext } = path.parse(file);
         const sizeInBytes = fileStats.size;
 
-        console.log(`${name} - ${extension} - ${sizeInBytes} bytes`);
+        console.log(`${name} - ${ext.substring(1)} - ${sizeInBytes} bytes`);
       }
     }
   } catch (err) {
