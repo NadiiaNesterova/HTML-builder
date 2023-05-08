@@ -1,47 +1,38 @@
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
 
 async function copyDir(srcDir, destDir) {
   try {
-    // Создаем папку, если она не существует
-    await fs.promises.mkdir(destDir, { recursive: true });
+    await fs.mkdir(destDir, { recursive: true });
 
-    // Читаем содержимое директории
-    const files = await fs.promises.readdir(srcDir);
+    const files = await fs.readdir(srcDir);
 
-    // Рекурсивно обходим все файлы и папки внутри исходной директории
     for (let file of files) {
       const srcPath = path.join(srcDir, file);
       const destPath = path.join(destDir, file);
 
-      // Получаем информацию о файле или папке
-      const stat = await fs.promises.stat(srcPath);
+      const stat = await fs.stat(srcPath);
 
-      // Если это файл, то копируем его
       if (stat.isFile()) {
-        await fs.promises.copyFile(srcPath, destPath);
+        await fs.copyFile(srcPath, destPath);
       }
 
-      // Если это папка, то рекурсивно вызываем эту же функцию для копирования содержимого папки
       if (stat.isDirectory()) {
         await copyDir(srcPath, destPath);
       }
     }
 
-    // Удаляем файлы, которых нет в исходной директории
-    const destFiles = await fs.promises.readdir(destDir);
+    const destFiles = await fs.readdir(destDir);
     for (let file of destFiles) {
-      const srcPath = path.join(srcDir, file);
       const destPath = path.join(destDir, file);
 
-      // Если файл не существует в исходной директории, то удаляем его
       if (!files.includes(file)) {
-        const stat = await fs.promises.stat(destPath);
+        const stat = await fs.stat(destPath);
         if (stat.isFile()) {
-          await fs.promises.unlink(destPath);
+          await fs.unlink(destPath);
         }
         if (stat.isDirectory()) {
-          await fs.promises.rmdir(destPath);
+          await fs.rmdir(destPath);
         }
       }
     }
@@ -51,7 +42,6 @@ async function copyDir(srcDir, destDir) {
   }
 }
 
-// Запускаем функцию
 const srcDir = path.join(__dirname, 'files');
 const destDir = path.join(__dirname, 'files-copy');
 copyDir(srcDir, destDir);
