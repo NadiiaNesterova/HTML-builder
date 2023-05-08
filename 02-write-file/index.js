@@ -18,14 +18,18 @@ fs.access(filename, (err) => {
 
 console.log('Hello! Write something... (type "exit" to exit):');
 
-rl.on('line', async (input) => {
+rl.on('line', (input) => {
   if (input === 'exit') {
     console.log('Goodbye!');
     fileStream.end();
     process.exit(0);
   } else {
     console.log(`You entered: ${input}`);
-    await fs.promises.writeFile(filename, input + '\n', { flag: 'a' });
+    fs.appendFile(filename, input + '\n', (err) => {
+      if (err) {
+        console.error(err);
+      }
+    });
   }
 });
 
